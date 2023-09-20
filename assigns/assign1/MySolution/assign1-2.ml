@@ -1,5 +1,4 @@
  
-let rec list_revapp(xs: 'a list)(ys: 'a list): 'a list =
 (* ****** ****** *)
 (*
   MyOCaml.ml is a library
