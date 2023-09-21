@@ -438,25 +438,23 @@ let string_concat_list(css: string list): string =
 
 
 
-let string_avoid_132(cs: string): bool =
-  let len = string_length cs in
-  if len < 3 then true
-  else
-    let rec check_132_like i =
-      if i >= len - 2 then true
+let rec string_avoid_132 s =
+  let len = String.length s in
+
+  let rec has_132 i =
+    if i >= len - 2 then
+      false
+    else
+      let a = s.[i] in
+      let b = s.[i + 1] in
+      let c = s.[i + 2] in
+      if a < c && c < b then
+        true
       else
-        let a = string_get_at cs i in
-        let b = string_get_at cs (i + 2) in
-        if char_isletter a && char_isletter b then
-          let c = string_get_at cs (i + 1) in
-          if char_isletter c && char_islower a && char_islower c && char_islower b then
-            if char_tolower a < char_tolower c && char_tolower c < char_tolower b then
-              false
-            else
-              check_132_like (i + 1)
-          else
-            check_132_like (i + 1)
-        else
-          check_132_like (i + 1)
-    in
-    check_132_like 0
+        has_132 (i + 1)
+  in
+
+  not (has_132 0)
+;;
+
+
