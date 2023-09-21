@@ -1,23 +1,12 @@
-(* ************************************************ *)
+let sort5 a b c d e =
+  let min2 x y = if x < y then x else y in
+  let max2 x y = if x > y then x else y in
+  let min3 x y z = min2 x (min2 y z) in
+  let max3 x y z = max2 x (max2 y z) in
 
-(*
+  let smallest = min5 a b c d e in
+  let biggest = max5 a b c d e in
 
- Question 8: 20 points
- Please give a NON-RECURSIVE implementation of sort5
- that takes 5 integers and returns a tuple that consists
- exactly of the 5 given integers ordered increasingly
-
- For instance, sort5(1, 2, 1, 2, 1) = (1, 1, 1, 2, 2)
- For instance, sort5(1, 3, 4, 5, 2) = (1, 2, 3, 4, 5)
- For instance, sort5(1, 3, 5, 4, 2) = (1, 2, 3, 4, 5)
-
- You can implement your own helper functions as long as
- you do not make use of recursion.
-
-*)
-
-let sort5: int*int*int*int*int -> int*int*int*int*int =
-  (* YOUR CODE *)
 
 
 (* ************************************************ *)
