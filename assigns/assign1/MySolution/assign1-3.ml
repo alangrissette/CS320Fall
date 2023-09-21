@@ -440,18 +440,23 @@ let string_concat_list(css: string list): string =
 
 let string_avoid_132(cs: string): bool =
   let len = string_length cs in
-  if len < 3 then true (* Strings with fewer than 3 characters are 132-avoid by definition. *)
+  if len < 3 then true
   else
-    let rec find_132_like i min_char max_char =
-      if i >= len then true
+    let rec check_132_like i =
+      if i >= len - 2 then true
       else
-        let current_char = string_get_at cs i in
-        if current_char >= max_char then
-          find_132_like (i + 1) min_char current_char
-        else if current_char > min_char then
-          false (* Found a 132-like sequence *)
+        let a = string_get_at cs i in
+        let b = string_get_at cs (i + 2) in
+        if char_isletter a && char_isletter b then
+          let c = string_get_at cs (i + 1) in
+          if char_isletter c && char_islower a && char_islower c && char_islower b then
+            if char_tolower a < char_tolower c && char_tolower c < char_tolower b then
+              false
+            else
+              check_132_like (i + 1)
+          else
+            check_132_like (i + 1)
         else
-          find_132_like (i + 1) min_char max_char
+          check_132_like (i + 1)
     in
-    find_132_like 1 (string_get_at cs 0) (string_get_at cs 0)
-;;
+    check_132_like 0

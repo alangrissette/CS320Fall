@@ -435,32 +435,18 @@ let string_concat_list(css: string list): string =
 
 
 
-
-
-let string_longest_ascend(xs: string): string =
-  let len = string_length xs in
-  let rec find_longest_sequence start end_pos max_start max_len =
-    if end_pos = len then
-      let longest_subseq = string_init max_len (fun i -> string_get_at xs (max_start + i)) in
-      longest_subseq
+let string_longest_ascend(cs: string): string =
+  let len = string_length cs in
+  let rec find_longest subseq result idx =
+    if idx = len then
+      if string_length subseq > string_length result then subseq
+      else result
     else
-      let c1 = string_get_at xs start in
-      let c2 = string_get_at xs end_pos in
-      if c1 <= c2 then
-        find_longest_sequence start (end_pos + 1) max_start (max_len + 1)
+      let curr_char = string_get_at cs idx in
+      if string_length subseq = 0 || curr_char >= string_get_at subseq 0 then
+        find_longest (string_cons curr_char subseq) result (idx + 1)
       else
-        let new_start = end_pos in
-        if max_len > (new_start - max_start) then
-          find_longest_sequence new_start (new_start + 1) new_start max_len
-        else
-          find_longest_sequence new_start (new_start + 1) max_start (new_start - max_start + 1)
+        find_longest (str curr_char) (find_longest subseq result idx) (idx + 1)
   in
-  if len = 0 then
-    ""
-  else
-    find_longest_sequence 0 1 0 1
+  find_longest "" "" 0
 ;;
-;;
-
-(* Example usage *)
-

@@ -437,35 +437,26 @@ let string_concat_list(css: string list): string =
 
 
 
-
 let intrep_add(ds1: string)(ds2: string): string =
-  let len1 = string_length ds1 in
-  let len2 = string_length ds2 in
-  let max_len = max len1 len2 in
-
-  let digit_at s i =
-    if i < string_length s then
-      match string_get_at s i with
-      | '0' .. '9' as c -> digit_of_char c
-      | _ -> 0 (* Ignore non-digit characters *)
-    else
-      0
+  let rec add_strings s1 s2 carry result =
+    let len1 = string_length s1 in
+    let len2 = string_length s2 in
+    let digit1, new_s1 =
+      if len1 > 0 then (digit_of_char (string_head s1), string_tail s1)
+      else (0, "")
+    in
+    let digit2, new_s2 =
+      if len2 > 0 then (digit_of_char (string_head s2), string_tail s2)
+      else (0, "")
+    in
+    let sum = digit1 + digit2 + carry in
+    let digit = char_of_digit (sum mod 10) in
+    let new_carry = sum / 10 in
+    if len1 = 0 && len2 = 0 && carry = 0 then result
+    else add_strings new_s1 new_s2 new_carry (string_cons digit result)
   in
-
-  let rec add_digits i carry result =
-    if i < max_len then
-      let sum = digit_at ds1 i + digit_at ds2 i + carry in
-      let new_carry = sum / 10 in
-      let digit = char_of_digit (sum mod 10) in
-      add_digits (i + 1) new_carry (digit :: result)
-    else
-      match carry with
-      | 0 -> result
-      | _ -> '1' :: result
-  in
-
-  let result_chars = add_digits 0 0 [] in
-
-  string_make_fwork (fun work -> list_foreach (list_reverse result_chars) work)
+  let result = add_strings ds1 ds2 0 "" in
+  if result = "" then "0" else result
 ;;
+
 
