@@ -437,33 +437,26 @@ let string_concat_list(css: string list): string =
 
 
 
-let intrep_add ds1 ds2 =
-  let rec add_strings str1 str2 carry result =
-    match (str1, str2) with
-    | ("", "") ->
-        (match carry with
-         | 0 -> result
-         | _ -> string_of_int carry ^ result)
-    | (s1, "") | ("", s1) ->
-        let n1 = int_of_string s1 in
-        let sum = n1 + carry in
-        add_strings "" "" (sum / 10) (string_of_int (sum mod 10) ^ result)
-    | (s1, s2) ->
-        let n1 = int_of_string (String.sub s1 (String.length s1 - 1) 1) in
-        let n2 = int_of_string (String.sub s2 (String.length s2 - 1) 1) in
-        let sum = n1 + n2 + carry in
-        let new_carry = sum / 10 in
-        let new_result = string_of_int (sum mod 10) ^ result in
-        add_strings
-          (String.sub s1 0 (String.length s1 - 1))
-          (String.sub s2 0 (String.length s2 - 1))
-          new_carry
-          new_result
+let intrep_add(ds1: string)(ds2: string): string =
+  let rec add_strings s1 s2 carry result =
+    let len1 = string_length s1 in
+    let len2 = string_length s2 in
+    let digit1, new_s1 =
+      if len1 > 0 then (digit_of_char (string_head s1), string_tail s1)
+      else (0, "")
+    in
+    let digit2, new_s2 =
+      if len2 > 0 then (digit_of_char (string_head s2), string_tail s2)
+      else (0, "")
+    in
+    let sum = digit1 + digit2 + carry in
+    let digit = char_of_digit (sum mod 10) in
+    let new_carry = sum / 10 in
+    if len1 = 0 && len2 = 0 && carry = 0 then result
+    else add_strings new_s1 new_s2 new_carry (string_cons digit result)
   in
-
-  let ds1 = String.trim ds1 in
-  let ds2 = String.trim ds2 in
-  if String.length ds1 = 0 then ds2
-  else if String.length ds2 = 0 then ds1
-  else add_strings ds1 ds2 0 ""
+  let result = add_strings ds1 ds2 0 "" in
+  if result = "" then "0" else result
 ;;
+
+

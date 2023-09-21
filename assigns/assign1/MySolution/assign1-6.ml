@@ -437,24 +437,24 @@ let is_1324_like a b c d =
   a < c && c < b && b < d
 
 let rec find_1324 cs i j k l =
-  if l >= String.length cs then false
+  if l >= string_length cs then false
   else if is_1324_like cs.[i] cs.[j] cs.[k] cs.[l] then true
   else find_1324 cs i j k (l + 1)
 
 let rec find_start cs i j k =
-  if k >= String.length cs then true
+  if k >= string_length cs then true
   else if find_1324 cs i j k 1 then false
   else find_start cs i j (k + 1)
 
 let string_avoid_1324 cs =
-  let n = String.length cs in
-  let rec check_subsequences i j =
+  let n = string_length cs in
+  let rec checking i j =
     if i >= n then true
-    else if j >= n then check_subsequences (i + 1) (i + 2)
-    else if find_start cs i j (j + 1) then check_subsequences i (j + 1)
+    else if j >= n then checking (i + 1) (i + 2)
+    else if find_start cs i j (j + 1) then checking i (j + 1)
     else false
   in
-  check_subsequences 0 1
+  checking 0 1
 ;;
 
 
