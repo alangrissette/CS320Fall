@@ -457,10 +457,13 @@ let string_sepjoin_list (sep: string) (xs: string list): string =
   let rec concat (xs: string list) =
     match xs with
     | [] -> []
-    | x1::x2 -> 
+    | [x] -> [x]
+    | x1::x2 ->
       let combined = x1 :: sep :: concat x2 in
       combined
   in
   let concatenated_list = concat xs in
-  string_concat_list concatenated_list
+  match concatenated_list with
+  | [] -> ""
+  | x::xs -> string_concat_list (x::xs)
 ;;
