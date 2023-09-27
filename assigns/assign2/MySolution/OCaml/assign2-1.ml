@@ -442,6 +442,21 @@ let string_concat_list(css: string list): string =
   )
 ;;
 
+type 'a mylist =
+  | MyNil
+  | MyCons of 'a * 'a mylist
+  | MySnoc of 'a mylist * 'a
+  | MyReverse of 'a mylist
+  | MyAppend2 of 'a mylist * 'a mylist
+
+(* ****** ****** *)
+exception MySubscript;;
 (* ****** ****** *)
 
-(* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+let rec mylist_length (xs: 'a mylist): int =
+  match xs with
+  | MyNil -> 0
+  | MyCons(_, tail) | MySnoc(tail, _) -> 1 + mylist_length tail
+  | MyReverse(l) -> mylist_length l
+  | MyAppend2(xs1, xs2) -> mylist_length xs1 + mylist_length xs2
+;;

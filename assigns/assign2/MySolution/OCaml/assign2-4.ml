@@ -442,6 +442,25 @@ let string_concat_list(css: string list): string =
   )
 ;;
 
+type 'a mylist =
+  | MyNil
+  | MyCons of 'a * 'a mylist
+  | MySnoc of 'a mylist * 'a
+  | MyReverse of 'a mylist
+  | MyAppend2 of 'a mylist * 'a mylist
+
+(* ****** ****** *)
+exception MySubscript;;
 (* ****** ****** *)
 
-(* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+let string_sepjoin_list (sep: string) (xs: string list): string =
+  let rec concat (xs: string list) =
+    match xs with
+    | [] -> []
+    | x1::x2 -> 
+      let combined = x1 :: sep :: concat x2 in
+      combined
+  in
+  let concatenated_list = concat xs in
+  string_concat_list concatenated_list
+;;

@@ -442,6 +442,23 @@ let string_concat_list(css: string list): string =
   )
 ;;
 
+type 'a mylist =
+  | MyNil
+  | MyCons of 'a * 'a mylist
+  | MySnoc of 'a mylist * 'a
+  | MyReverse of 'a mylist
+  | MyAppend2 of 'a mylist * 'a mylist
+
+(* ****** ****** *)
+exception MySubscript;;
 (* ****** ****** *)
 
-(* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+let rec mylist_get_at (xs: 'a mylist) (i0: int): 'a =
+  match (xs, i0) with
+  | (MyNil, _) -> raise MySubscript
+  | (_, _) when i0 < 0 -> raise MySubscript
+  | (MyCons(x, _), 0) -> x
+  | (MyCons(_, rest), i) when i > 0 -> mylist_get_at rest (i - 1)
+  | (_, _) -> raise MySubscript
+;;
+
