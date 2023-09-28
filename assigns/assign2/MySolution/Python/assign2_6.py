@@ -105,9 +105,10 @@ def fnlist_reverse(xs):
 
 ############### end of [CS320-2023-Fall-classlib-MyPython.py] ###############
 
+
 def string_merge(cs1, cs2):
-    n1 = len(cs1)
-    n2 = len(cs2)
+    n1 = string_length(cs1)
+    n2 = string_length(cs2)
 
     def foreach(i1, i2, work):
         if i1 < n1:
@@ -121,12 +122,8 @@ def string_merge(cs1, cs2):
                     work(c2)
                     foreach(i1, i2 + 1, work)
             else:
-                def work_func(i):
-                    work(string_get_at(cs1, i1 + i))
-                int1_foreach(n1 - i1, work_func)
+                int1_foreach(n1 - i1, lambda i: work(string_get_at(cs1, i1 + i)))
         else:
-            def work_func(i):
-                work(string_get_at(cs2, i2 + i))
-            int1_foreach(n2 - i2, work_func)
+            int1_foreach(n2 - i2, lambda i: work(string_get_at(cs2, i2 + i)))
 
-    return string_make_fwork(foreach(0, 0, work_func))
+    return string_make_fwork(lambda work: foreach(0, 0, work))
