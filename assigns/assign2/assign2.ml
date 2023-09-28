@@ -79,6 +79,10 @@ let rec mylist_length (xs: 'a mylist): int =
   | MyReverse(l) -> mylist_length l
   | MyAppend2(xs1, xs2) -> mylist_length xs1 + mylist_length xs2
 *)
+(*
+let mylist_length =
+fun xs -> foreach_to_length(mylist_foreach)
+*)
 
 (* ****** ****** *)
 
@@ -107,7 +111,21 @@ let rec mylist_get_at (xs: 'a mylist) (i0: int): 'a =
   | (_, _) -> mylist_subscript_exn
 //
 *)
-
+(*
+let mylist_get_at =
+fun xs -> foreach_to_get_at(mylist_foreach)
+*)
+(* ****** ****** *)
+(*
+let
+foreach_to_map_list
+( foreach
+: ('xs, 'x0) foreach): ('xs, 'x0, 'y0) map_list =
+fun xs fopr ->
+list_make_fwork
+(fun work -> foreach(xs)(fun x -> work(fopr(x))))
+;;
+*)
 (* ****** ****** *)
 
 type
