@@ -453,12 +453,15 @@ type 'a mylist =
 exception MySubscript;;
 (* ****** ****** *)
 
-let rec mylist_get_at (xs: 'a mylist) (i0: int): 'a =
-  match (xs, i0) with
-  | (MyNil, _) -> raise MySubscript
-  | (_, _) when i0 < 0 -> raise MySubscript
-  | (MyCons(x, _), 0) -> x
-  | (MyCons(_, rest), i) when i > 0 -> mylist_get_at rest (i - 1)
-  | (_, _) -> raise MySubscript
+let mylist_get_at (xs: 'a list) (i0: int): 'a =
+  let rec foreach (i: int) (x0: 'a) =
+    if i = i0 then
+      x0
+    else
+      match xs with
+      | [] -> raise MySubscript
+      | x :: xs' -> foreach (i + 1) x
+  in
+  foreach 0 (List.hd xs)
 ;;
 
