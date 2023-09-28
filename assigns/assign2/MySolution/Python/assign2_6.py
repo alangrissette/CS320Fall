@@ -107,34 +107,30 @@ def fnlist_reverse(xs):
 
 
 def string_merge(cs1, cs2):
-    n1 = string_length(cs1)
-    n2 = string_length(cs2)
+    n1 = len(cs1)
+    n2 = len(cs2)
 
     result = []
 
-    def work(c):
-        result.append(c)
+    def foreach(i1, i2):
+        if i1 < n1:
+            if i2 < n2:
+                c1 = cs1[i1]
+                c2 = cs2[i2]
 
-    i1 = 0
-    i2 = 0
-
-    while i1 < n1 and i2 < n2:
-        c1 = string_get_at(cs1, i1)
-        c2 = string_get_at(cs2, i2)
-
-        if c1 <= c2:
-            work(c1)
-            i1 += 1
+                if c1 <= c2:
+                    result.append(c1)
+                    foreach(i1 + 1, i2)
+                else:
+                    result.append(c2)
+                    foreach(i1, i2 + 1)
+            else:
+                for i in range(i1, n1):
+                    result.append(cs1[i])
         else:
-            work(c2)
-            i2 += 1
+            for i in range(i2, n2):
+                result.append(cs2[i])
 
-    while i1 < n1:
-        int1_foreach(n1 - i1, lambda i: work(string_get_at(cs1, i1 + i)))
-        break
+    foreach(0, 0)
 
-    while i2 < n2:
-        int1_foreach(n2 - i2, lambda i: work(string_get_at(cs2, i2 + i)))
-        break
-
-    return string_make_fwork(lambda work: list(map(work, result)))
+    return ''.join(result)
