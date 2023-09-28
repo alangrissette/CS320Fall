@@ -112,8 +112,8 @@ def string_merge(cs1, cs2):
     def foreach(i1, i2, work):
         if i1 < n1:
             if i2 < n2:
-                c1 = cs1[i1]
-                c2 = cs2[i2]
+                c1 = string_get_at(cs1, i1)
+                c2 = string_get_at(cs2, i2)
                 if c1 <= c2:
                     work(c1)
                     foreach(i1 + 1, i2, work)
@@ -121,8 +121,12 @@ def string_merge(cs1, cs2):
                     work(c2)
                     foreach(i1, i2 + 1, work)
             else:
-                int1_foreach(n1 - i1, lambda i: work(cs1[i1 + i]))
+                def work_func(i):
+                    work(string_get_at(cs1, i1 + i))
+                int1_foreach(n1 - i1, work_func)
         else:
-            int1_foreach(n2 - i2, lambda i: work(cs2[i2 + i]))
+            def work_func(i):
+                work(string_get_at(cs2, i2 + i))
+            int1_foreach(n2 - i2, work_func)
 
-    return string_make_fwork(foreach(0, 0))
+    return string_make_fwork(foreach(0, 0, work_func))
