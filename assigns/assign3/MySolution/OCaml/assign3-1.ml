@@ -502,10 +502,10 @@ let rec matrix_transpose_helper xss i j =
   | [] -> []
   | xs :: xss' ->
     if j >= List.length xs then []
-    else string_get_at (List.nth xs j) i :: matrix_transpose_helper xss i (j + 1)
+    else List.nth xs j :: matrix_transpose_helper xss i (j + 1)
 ;;
 
-let rec matrix_transpose xss =
+let matrix_transpose (xss: 'a list list): 'a list list =
   match xss with
   | [] -> []
   | xs :: _ ->

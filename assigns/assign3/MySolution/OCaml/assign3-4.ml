@@ -515,14 +515,14 @@ let list_of_buddies word =
   let indices = int1_listize len in
   let is_buddy buddy =
     let diffs =
-      list_foldleft indices [] (fun diffs i ->
+      List.fold_left (fun diffs i ->
         if word.[i] <> buddy.[i] then i :: diffs else diffs
-      )
+      ) [] indices
     in
     List.length diffs = 1
   in
   let word_list =
-    list_map indices (fun i -> String.make 1 word.[i])
+    List.map (fun i -> String.make 1 word.[i]) indices
   in
-  list_filter is_buddy word_list
+  List.filter is_buddy word_list
 ;;

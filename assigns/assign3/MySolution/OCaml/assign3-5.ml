@@ -504,19 +504,19 @@ let is_safe queens new_queen =
     match queens with
     | [] -> true
     | q :: qs ->
-      q <> new_queen && abs (col - new_queen) <> abs (List.length qs) &&
+      q <> new_queen && abs (col - q) <> abs (List.length qs) &&
       is_safe_col (col + 1) qs
   in
   is_safe_col 1 (List.rev queens)
 
 let place_queen queens new_queen =
-  if is_safe queens new_queen then new_queen :: queens else queens
+  if is_safe queens new_queen then queens @ [new_queen] else queens
 
 let rec generate_positions n acc =
   if n <= 0 then acc
   else generate_positions (n - 1) (n :: acc)
 
-let initial_board = [0; 0; 0; 0; 0; 0; 0; 0]
+let initial_board = []
 
 let queen8_puzzle_solve () =
   let positions = generate_positions 8 [] in
