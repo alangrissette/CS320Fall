@@ -500,36 +500,31 @@ else StrCons(fopr(i), helper(i+1)) in helper(0)
 type board_t = int list
 
 let is_safe queens new_queen =
-  let rec is_safe_col col queens =
-    match queens with
-    | [] -> true
-    | q :: qs ->
-      q <> new_queen && abs (col - q) <> abs (List.length qs) &&
-      is_safe_col (col + 1) qs
+  let is_safe_col col queens =
+    List.for_all (fun q -> q <> new_queen && abs (col - q) <> abs (List.length queens)) queens
   in
   is_safe_col 1 (List.rev queens)
 
 let place_queen queens new_queen =
   if is_safe queens new_queen then queens @ [new_queen] else queens
 
-let rec generate_positions n acc =
-  if n <= 0 then acc
-  else generate_positions (n - 1) (n :: acc)
+let generate_positions n =
+  let rec aux acc i = if i <= 0 then acc else aux (i :: acc) (i - 1) in
+  aux [] n
 
 let initial_board = []
 
 let queen8_puzzle_solve () =
-  let positions = generate_positions 8 [] in
-  List.fold_left
-    (fun boards new_queen ->
-      List.fold_left
-        (fun acc board ->
-          let queens = board in
-          List.fold_left
-            (fun acc col -> place_queen queens col :: acc)
-            acc
-            positions)
-        []
-        boards)
-    [initial_board]
-    positions
+  let positions = generate_positions 8 in
+  let combine_boards boards new_queen =
+    List.fold_left
+      (fun acc board ->
+        let queens = board in
+        List.fold_left
+          (fun acc col -> place_queen queens col :: acc)
+          acc
+          positions)
+      []
+      boards
+  in
+  List.fold_left combine_boards [initial_board] positions

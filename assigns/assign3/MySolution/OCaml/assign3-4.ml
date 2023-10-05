@@ -510,19 +510,13 @@ let rec list_map xs f =
   List.fold_right (fun x acc -> f x :: acc) xs []
 ;;
 
-let list_of_buddies word =
+let list_of_buddies (word: string): string list =
   let len = String.length word in
-  let indices = int1_listize len in
+  let indices = List.init len (fun i -> i) in
   let is_buddy buddy =
-    let diffs =
-      List.fold_left (fun diffs i ->
-        if word.[i] <> buddy.[i] then i :: diffs else diffs
-      ) [] indices
-    in
+    let diffs = List.filter (fun i -> word.[i] <> buddy.[i]) indices in
     List.length diffs = 1
   in
-  let word_list =
-    List.map (fun i -> String.make 1 word.[i]) indices
-  in
+  let word_list = List.map (fun i -> String.make 1 word.[i]) indices in
   List.filter is_buddy word_list
 ;;
