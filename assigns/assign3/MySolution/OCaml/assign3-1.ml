@@ -497,25 +497,25 @@ else StrCons(fopr(i), helper(i+1)) in helper(0)
 
 (* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
 
-let rec matrix_transpose_helper xss i j =
+
+let rec matrix_transpose_helper xss i =
   match xss with
   | [] -> []
   | xs :: xss' ->
-    if j >= List.length xs then []
-    else List.nth xs j :: matrix_transpose_helper xss i (j + 1)
-;;
+    let row = match List.nth_opt xs i with
+      | Some elem -> [elem]
+      | None -> []
+    in
+    row @ matrix_transpose_helper xss' i
 
 let matrix_transpose (xss: 'a list list): 'a list list =
-  match xss with
-  | [] -> []
-  | xs :: _ ->
-    let num_rows = List.length xs in
-    let rec helper i =
-      if i >= num_rows then []
-      else matrix_transpose_helper xss i 0 :: helper (i + 1)
-    in
-    helper 0
+  let num_rows = match xss with
+    | [] -> 0
+    | xs :: _ -> List.length xs
+  in
+  let rec helper i =
+    if i >= num_rows then []
+    else matrix_transpose_helper xss i :: helper (i + 1)
+  in
+  helper 0
 ;;
-
-;;
-

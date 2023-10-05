@@ -497,26 +497,31 @@ else StrCons(fopr(i), helper(i+1)) in helper(0)
 
 (* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
 
-let rec int1_listize n =
-  if n <= 0 then []
-  else n :: int1_listize (n - 1)
-;;
-
-let list_filter pred xs =
-  List.fold_right (fun x acc -> if pred x then x :: acc else acc) xs []
-;;
-
-let rec list_map xs f =
-  List.fold_right (fun x acc -> f x :: acc) xs []
-;;
-
-let list_of_buddies (word: string): string list =
-  let len = String.length word in
-  let indices = List.init len (fun i -> i) in
-  let is_buddy buddy =
-    let diffs = List.filter (fun i -> word.[i] <> buddy.[i]) indices in
-    List.length diffs = 1
+let list_of_buddies(word: string): string list =
+  let n = String.length word in
+  let is_buddy w1 w2 =
+    let diff_count = ref 0 in
+    for i = 0 to n - 1 do
+      if w1.[i] <> w2.[i] then incr diff_count;
+      if !diff_count > 1 then raise Exit
+    done;
+    !diff_count = 1
   in
-  let word_list = List.map (fun i -> String.make 1 word.[i]) indices in
-  List.filter is_buddy word_list
+  let buddies = ref [] in
+  for i = 0 to n - 1 do
+    for j = 0 to 25 do
+      let new_char = char_of_int (int_of_char 'a' + j) in
+      let new_word =
+        String.init n (fun k ->
+          if k = i then new_char else word.[k]
+        )
+      in
+      try
+        if is_buddy word new_word then
+          buddies := new_word :: !buddies
+      with Exit -> ()
+    done
+  done;
+  !buddies
 ;;
+
