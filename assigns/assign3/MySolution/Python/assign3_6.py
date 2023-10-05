@@ -127,6 +127,16 @@ class mylist:
     def __reversed__(self):
         return mylist_reverse(self)
 
+class mylist_nil(mylist):
+    def __init__(self):
+        super().__init__(0)
+
+
+class mylist_cons(mylist):
+    def __init__(self, x1, xs):
+        super().__init__(1, x1, xs)
+
+
 def mylist_iter(lst):
     i0 = 0
     while i0 < len(lst.args):
@@ -137,6 +147,29 @@ class mylist_reverse:
     def __init__(self, lst):
         self.lst = lst
 
+
+class mylist_snoc(mylist):
+    def __init__(self, xs, x1):
+        super().__init__(2, xs, x1)
+
+
+class mylist_append2(mylist):
+    def __init__(self, xs1, xs2):
+        super().__init__(4, xs1, xs2)
+
+
+
+class mylist_reverse(mylist):
+    def __init__(self, lst):
+        super().__init__(3, lst)
+
+    def __iter__(self):
+        i0 = len(self.args[0].args) - 1
+        while i0 >= 0:
+            yield self.args[0].args[i0]
+            i0 -= 1
+
+            
     def __iter__(self):
         i0 = len(self.lst.args) - 1
         while i0 >= 0:
