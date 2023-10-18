@@ -518,17 +518,18 @@ let rec stream_map xs f yf =
   | StrNil -> yf ()
   | StrCons (x, xf) -> StrCons(f x, fun () -> stream_map (xf ()) f yf)
 
-let rec perms (xs: 'a list): 'a list stream = 
+let rec
+ permutate (xs: 'a list): 'a list stream = 
   match xs with
   | [] -> fun () -> StrCons([], fun () -> StrNil)
-  | xs -> let rec perms1 (xs: 'a list) (ys: 'a list) =
+  | xs -> let rec permutate1 (xs) (xs1) =
     match xs with
     | [] -> StrNil
-    | x::xs -> stream_map (perms (list_reverse ys @ xs) ()) (list_cons x) (fun () -> perms1 xs (x::ys)) 
-    (* @ perms1 xs (x::ys) *)
-  in
-    fun() -> perms1 xs []
+    | x::xs -> stream_map (permutate (list_reverse xs1 @ xs) ()) 
+    (list_cons x) 
+    (fun () -> permutate1 xs (x::xs1)) in
+    fun() -> permutate1 xs []
 
 let list_permute(xs: 'a list): 'a list stream =
-  perms(xs)
+  permutate(xs)
 ;;

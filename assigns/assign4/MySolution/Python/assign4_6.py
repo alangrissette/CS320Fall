@@ -258,23 +258,37 @@ def pytuple_streamize(xs):
 ############### end of [CS320-2023-Fall-classlib-MyPython.py] ###############
 
 
-def string_fset_at(cs, i0, c0):
-    result = ""
-    for i in range(len(cs)):
-        if i != i0:
-            result += cs[i]
+def generator_of_stream(fxs):
+    while True:
+        cxs = fxs()
+        if cxs.ctag == 0:
+            break
         else:
-            result += c0
-    return result
+            fxs = cxs.cons2
+            yield cxs.cons1
+    raise StopIteration
 
-alphabet = ''.join([chr(ord('a') + i) for i in range(26)])
+def theNatPairs_cubesum():
+    def helper(i, j):
+        return (i, j, i**3 + j**3)
 
-def list_of_buddies(word):
-    n0 = len(word)
-    buddies = []
-    for i0 in range(n0):
-        c0 = word[i0]
-        for c1 in alphabet:
-            if c1 != c0:
-                buddies.append(string_fset_at(word, i0, c1))
-    return buddies
+    def next_pair(i, j):
+        return (i, j + 1)
+
+    def next_row(i):
+        return (i + 1, i + 1)
+
+    def merge(row, col):
+        return helper(row[0], col[0])
+
+    def enumerate_pairs(row):
+        return stream_tabulate(row[0], lambda col: merge(row, col))
+
+    def merge_rows(row, rest):
+        return stream_concat(row, rest)
+
+    def the_pairs():
+        return stream_flatmap(enumerate_pairs, stream_tabulate(0, lambda row: merge_rows(next_row(row), the_pairs())))
+
+    return stream_map(lambda x: helper(x[0], x[1]), the_pairs())
+
