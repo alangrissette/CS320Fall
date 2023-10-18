@@ -256,3 +256,35 @@ def pytuple_streamize(xs):
 ###########################################################################
 
 ############### end of [CS320-2023-Fall-classlib-MyPython.py] ###############
+
+
+from typing import List
+
+def string_fset_at(cs: str, i0: int, c0: str) -> str:
+    def helper(i):
+        return c0 if i == i0 else cs[i]
+    
+    return ''.join(helper(i) for i in range(len(cs)))
+
+# ****** ******
+
+alphabet = ''.join(chr(ord('a') + i) for i in range(26))
+
+# ****** ******
+
+def list_of_buddies(word: str) -> List[str]:
+    n0 = len(word)
+    
+    def work_func(work):
+        def inner(i0):
+            c0 = word[i0]
+            for c1 in alphabet:
+                if c1 != c0:
+                    work(string_fset_at(word, i0, c1))
+                    
+        return inner
+    
+    result = []
+    int1_foreach(n0)(work_func(result.append))
+    
+    return result

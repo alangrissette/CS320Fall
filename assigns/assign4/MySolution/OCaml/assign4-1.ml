@@ -517,3 +517,17 @@ match fxss with
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+
+let rec partial_sums n =
+  let rec helper k =
+    if k = n then 0.0
+    else
+      let sign = if k mod 2 = 0 then 1.0 else -1.0 in
+      sign /. float_of_int (k + 1) +. helper (k + 1)
+  in
+  helper 0
+
+let rec the_ln2_stream : float stream =
+  fun () ->
+    let rec helper n = StrCons (partial_sums n, fun () -> helper (n + 1)) in
+    helper 1

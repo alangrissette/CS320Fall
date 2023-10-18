@@ -507,13 +507,28 @@ match fxs() with
 ;;
 (* ****** ****** *)
 
-let rec
-stream_concat_list
-(fxss: 'a stream list): 'a stream = fun() ->
-match fxss with
-| [] -> StrNil
-| fxs1 :: fxss -> stream_append(fxs1)(stream_concat_list(fxss))()
-;;
-(* ****** ****** *)
+let list_map(xs: 'a list)(fopr: 'a -> 'b): 'b list =
+  list_foldright(xs)([])(fun x0 r0 -> fopr(x0) :: r0)
 
-(* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+let list_cons(x1: 'a)(xs: 'a list): 'a list =
+  x1 :: xs
+
+let rec stream_map xs f yf =
+  match xs with
+  | StrNil -> yf ()
+  | StrCons (x, xf) -> StrCons(f x, fun () -> stream_map (xf ()) f yf)
+
+let rec perms (xs: 'a list): 'a list stream = 
+  match xs with
+  | [] -> fun () -> StrCons([], fun () -> StrNil)
+  | xs -> let rec perms1 (xs: 'a list) (ys: 'a list) =
+    match xs with
+    | [] -> StrNil
+    | x::xs -> stream_map (perms (list_reverse ys @ xs) ()) (list_cons x) (fun () -> perms1 xs (x::ys)) 
+    (* @ perms1 xs (x::ys) *)
+  in
+    fun() -> perms1 xs []
+
+let list_permute(xs: 'a list): 'a list stream =
+  perms(xs)
+;;

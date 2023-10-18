@@ -516,4 +516,9 @@ match fxss with
 ;;
 (* ****** ****** *)
 
-(* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+let rec theNatPairs : (int * int) stream =
+  fun () ->
+    let rec enumerate_pairs i =
+      StrCons((i, 0), fun () -> enumerate_pairs (i + 1))
+    in
+    enumerate_pairs 0

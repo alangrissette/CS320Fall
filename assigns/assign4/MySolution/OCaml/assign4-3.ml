@@ -517,3 +517,24 @@ match fxss with
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+
+type 'a gtree =
+| GTnil | GTcons of 'a * ('a gtree list)
+
+let rec gtree_streamize_dfs (xs: 'a gtree): 'a stream =
+  let rec dfs_helper (nodes: 'a gtree list): 'a stream = fun () ->
+    match nodes with
+    | [] -> StrNil
+    | GTnil :: rest -> dfs_helper rest ()
+    | GTcons (value, children) :: rest ->
+      StrCons (value, dfs_helper (children @ rest))
+  in dfs_helper [xs]
+
+let rec gtree_streamize_bfs (xs: 'a gtree): 'a stream =
+  let rec bfs_helper (nodes: 'a gtree list): 'a stream = fun () ->
+    match nodes with
+    | [] -> StrNil
+    | GTnil :: rest -> bfs_helper rest ()
+    | GTcons (value, children) :: rest ->
+      StrCons (value, bfs_helper (rest @ children))
+  in bfs_helper [xs]
