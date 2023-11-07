@@ -517,11 +517,12 @@ match fxss with
 (* ****** ****** *)
 
 let rec theNatPairs : (int * int) stream =
+  let rec enumerate_row i j =
+    StrCons((i, j), fun () -> enumerate_row (i - 1) (j + 1))
+  in
+  let rec enumerate_pairs i =
+    enumerate_row i 0
+  in
   fun () ->
-    let rec enumerate_pairs i j =
-      StrCons((i, j), fun () -> 
-        if j = 0 then enumerate_pairs (i + 1) 0
-        else enumerate_pairs (i - 1) (j + 1))
-    in
-    enumerate_pairs 0 0
+    enumerate_pairs 0
 
