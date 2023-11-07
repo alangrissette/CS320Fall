@@ -960,26 +960,25 @@ let rec trim cs =
     and parse_num tokens =
       match tokens with
       | [] -> None
-      | '0' .. '9' :: rest ->
-          let num, new_tokens = parse_digit tokens in
-          Some (Int num, new_tokens)
-      | '(' :: 'a' :: 'd' :: 'd' :: _ -> parse_add tokens
-      | '(' :: 'm' :: 'u' :: 'l' :: _ -> parse_mul tokens
+      | '(' :: 'a' :: 'd' :: 'd' :: rest -> parse_add tokens
+      | '(' :: 'm' :: 'u' :: 'l' :: rest -> parse_mul tokens
+      | c :: rest when '0' <= c && c <= '9' -> parse_digit tokens
       | _ -> None
   
-    and parse_digit tokens =
-      let rec loop acc tokens =
-        match tokens with
-        | [] -> (acc, tokens)
-        | c :: rest when '0' <= c && c <= '9' -> loop (acc * 10 + int_of_char c - int_of_char '0') rest
-        | _ -> (acc, tokens)
-      in
-      loop 0 tokens
-    in
+      and parse_digit tokens =
+        let rec loop acc tokens =
+          match tokens with
+          | [] -> (Int acc, tokens)
+          | c :: rest when '0' <= c && c <= '9' -> loop (acc * 10 + int_of_char c - int_of_char '0') rest
+          | _ -> (Int acc, tokens)
+        in
+        let num, rest = loop 0 tokens in
+        Some (num, rest)
+      in      
+      
   
     let char_list = string_listize s |> trim in
     match parse_expr char_list with
     | Some (expr, []) -> Some expr
     | _ -> None
   
- 
