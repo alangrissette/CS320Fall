@@ -1070,7 +1070,7 @@ sexpr_parse "((mul 1 2)" = None
 (* ****** ****** *)
 
 
-
+(* 
 Grammar (<expr> is the start symbol)
 
 <digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
@@ -1080,17 +1080,14 @@ Grammar (<expr> is the start symbol)
           | (add <exprs> )
           | (mul <exprs> )
 
+*)
 
-type sexpr =
-  | SInt of int        (* 1, 2, 3, 4 ...  *)
-  | SAdd of sexpr list (* (add e1 e2 ...) *)
-  | SMul of sexpr list (* (mul e1 e2 ...) *)
 
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-assigns-assign6.ml] *)
 
-  type sexpr =
+type sexpr =
   | SInt of int        (* 1, 2, 3, 4 ...  *)
   | SAdd of sexpr list (* (add e1 e2 ...) *)
   | SMul of sexpr list (* (mul e1 e2 ...) *)
@@ -1109,32 +1106,26 @@ and exprs_to_string exprs =
   | [expr] -> sexpr_to_string expr
   | expr :: rest -> sexpr_to_string expr ^ " " ^ exprs_to_string rest
 
-let parse_sint =
-  let* n = natural in
-  pure (SInt n)
+and parse_sint =
+  natural >>= fun n -> pure (SInt n)
 
-let parse_sadd () input =
-  let* _ = keyword "(add" input in
-  let* exprs = parse_sexprs () in
-  let* _ = keyword ")" in
+and parse_sexprs () =
+  many' (fun () -> whitespaces >> parse_sexpr ())
+
+and parse_sadd () =
+  keyword "(add" >>= fun _ ->
+  parse_sexprs () >>= fun exprs ->
+  keyword ")" >>= fun _ ->
   pure (SAdd exprs)
 
-let parse_smul () input =
-  let* _ = keyword "(mul" input in
-  let* exprs = parse_sexprs () in
-  let* _ = keyword ")" in
+and parse_smul () =
+  keyword "(mul" >>= fun _ ->
+  parse_sexprs () >>= fun exprs ->
+  keyword ")" >>= fun _ ->
   pure (SMul exprs)
 
-let parse_sexpr input =
-  match parse_sint input with
-  | Some sexpr -> Some sexpr
-  | None ->
-      match parse_sadd input with
-      | Some sexpr -> Some sexpr
-      | None -> parse_smul input
-
-let parse_sexprs () =
-  many' (fun () -> whitespaces >> parse_sexpr ())
+and parse_sexpr () =
+  parse_sint <|> parse_sadd () <|> parse_smul ()
 
 let sexpr_parse s =
   match string_parse (parse_sexpr ()) s with
