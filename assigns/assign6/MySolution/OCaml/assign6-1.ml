@@ -710,3 +710,433 @@ let keyword(s: string) =
 (* ****** ****** *)
 
 (* end of [CS320-2023-Fall-classlib-MyOCaml.ml] *)
+
+(* util functions *)
+
+let is_lower_case c =
+  'a' <= c && c <= 'z'
+
+let is_upper_case c =
+  'A' <= c && c <= 'Z'
+
+let is_alpha c =
+  is_lower_case c || is_upper_case c
+
+let is_digit c =
+  '0' <= c && c <= '9'
+
+let is_alphanum c =
+  is_lower_case c ||
+  is_upper_case c ||
+  is_digit c
+
+let is_blank c =
+  String.contains " \012\n\r\t" c
+
+let explode s =
+  List.of_seq (String.to_seq s)
+
+let implode ls =
+  String.of_seq (List.to_seq ls)
+
+let readlines (file : string) : string =
+  let fp = open_in file in
+  let rec loop () =
+    match input_line fp with
+    | s -> s ^ "\n" ^ (loop ())
+    | exception End_of_file -> ""
+  in
+  let res = loop () in
+  let () = close_in fp in
+  res
+
+(* end of util functions *)
+
+(* parser combinators *)
+
+type 'a parser = char list -> ('a * char list) option
+
+let parse (p : 'a parser) (s : string) : ('a * char list) option =
+  p (explode s)
+
+let pure (x : 'a) : 'a parser =
+  fun ls -> Some (x, ls)
+
+let fail : 'a parser = fun ls -> None
+
+let bind (p : 'a parser) (q : 'a -> 'b parser) : 'b parser =
+  fun ls ->
+    match p ls with
+    | Some (a, ls) -> q a ls
+    | None -> None
+
+let (>>=) = bind
+let (let*) = bind
+
+let read : char parser =
+  fun ls ->
+  match ls with
+  | x :: ls -> Some (x, ls)
+  | _ -> None
+
+let satisfy (f : char -> bool) : char parser =
+  fun ls ->
+  match ls with
+  | x :: ls ->
+    if f x then Some (x, ls)
+    else None
+  | _ -> None
+
+let char (c : char) : char parser =
+  satisfy (fun x -> x = c)
+
+let seq (p1 : 'a parser) (p2 : 'b parser) : 'b parser =
+  fun ls ->
+  match p1 ls with
+  | Some (_, ls) -> p2 ls
+  | None -> None
+
+let (>>) = seq
+
+let seq' (p1 : 'a parser) (p2 : 'b parser) : 'a parser =
+  fun ls ->
+  match p1 ls with
+  | Some (x, ls) ->
+    (match p2 ls with
+     | Some (_, ls) -> Some (x, ls)
+     | None -> None)
+  | None -> None
+
+let (<<) = seq'
+
+let disj (p1 : 'a parser) (p2 : 'a parser) : 'a parser =
+  fun ls ->
+  match p1 ls with
+  | Some (x, ls)  -> Some (x, ls)
+  | None -> p2 ls
+
+let (<|>) = disj
+
+let map (p : 'a parser) (f : 'a -> 'b) : 'b parser =
+  fun ls ->
+  match p ls with
+  | Some (a, ls) -> Some (f a, ls)
+  | None -> None
+
+let (>|=) = map
+
+let (>|) = fun p c -> map p (fun _ -> c)
+
+let rec many (p : 'a parser) : ('a list) parser =
+  fun ls ->
+  match p ls with
+  | Some (x, ls) ->
+    (match many p ls with
+     | Some (xs, ls) -> Some (x :: xs, ls)
+     | None -> Some (x :: [], ls))
+  | None -> Some ([], ls)
+
+let rec many1 (p : 'a parser) : ('a list) parser =
+  fun ls ->
+  match p ls with
+  | Some (x, ls) ->
+    (match many p ls with
+     | Some (xs, ls) -> Some (x :: xs, ls)
+     | None -> Some (x :: [], ls))
+  | None -> None
+
+let rec many' (p : unit -> 'a parser) : ('a list) parser =
+  fun ls ->
+  match p () ls with
+  | Some (x, ls) ->
+    (match many' p ls with
+     | Some (xs, ls) -> Some (x :: xs, ls)
+     | None -> Some (x :: [], ls))
+  | None -> Some ([], ls)
+
+let rec many1' (p : unit -> 'a parser) : ('a list) parser =
+  fun ls ->
+  match p () ls with
+  | Some (x, ls) ->
+    (match many' p ls with
+     | Some (xs, ls) -> Some (x :: xs, ls)
+     | None -> Some (x :: [], ls))
+  | None -> None
+
+let whitespace : unit parser =
+  fun ls ->
+  match ls with
+  | c :: ls ->
+    if String.contains " \012\n\r\t" c
+    then Some ((), ls)
+    else None
+  | _ -> None
+
+let ws : unit parser =
+  (many whitespace) >| ()
+
+let ws1 : unit parser =
+  (many1 whitespace) >| ()
+
+let digit : char parser =
+  satisfy is_digit
+
+let natural : int parser =
+  fun ls ->
+  match many1 digit ls with
+  | Some (xs, ls) ->
+    Some (int_of_string (implode xs), ls)
+  | _ -> None
+
+let literal (s : string) : unit parser =
+  fun ls ->
+  let cs = explode s in
+  let rec loop cs ls =
+    match cs, ls with
+    | [], _ -> Some ((), ls)
+    | c :: cs, x :: xs ->
+      if x = c
+      then loop cs xs
+      else None
+    | _ -> None
+  in loop cs ls
+
+let keyword (s : string) : unit parser =
+  (literal s) >> ws >| ()
+                         
+                         (* end of parser combinators *)
+
+(* Grammar 
+
+<expr> ::= <digit>>+<expr> | <digit>
+<digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+
+
+type expr = Add of expr * expr |  D of int
+
+let rec expr_to_string (c:expr) : string =
+  match c with
+  | Add(t1,t2) -> (expr_to_string t1) ^ "+" ^ (expr_to_string t2)
+  | D d -> string_of_int d
+
+let dig =
+    let* x = natural in
+    (if (0 <= x) && (x <= 9) then pure (D x) else fail  )
+
+let rec expr() = 
+  (let* x= dig in
+   let* _ = ws in
+   let* _=  char '+' in 
+   let* _ = ws in
+   let* y= expr() in
+   pure (Add (x,y)))
+  <|> dig  
+  
+let parse_expr e = 
+  match parse (expr()) e with
+    Some (x,[]) -> Some x
+  |_ -> None
+
+        *)
+ 
+
+                         
+(* Grammar 
+
+<expr> ::= <digit>>+<expr> | <digit>*<expr> | <digit>
+<digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+
+  
+type expr = Add of expr * expr | Mul of expr * expr | D of int
+
+
+let rec expr_to_string (c:expr) : string =
+  match c with
+  | Add(t1,t2) -> (expr_to_string t1) ^ "+" ^ (expr_to_string t2)
+  | Mul(t1,t2) -> (expr_to_string t1) ^ "*" ^ (expr_to_string t2)
+  | D d -> string_of_int d
+
+
+let rec expr() = 
+  (let* x = natural in 
+   let* _= ws in 
+   let* _=  char '+' in 
+   let* _= ws in 
+   let* y= expr() in
+   pure (Add (D x,y)))
+ <|> 
+(let* x = natural in 
+   let* _= ws in 
+   let* _=  char '*' in 
+   let* _= ws in 
+   let* y= expr() in
+   pure (Mul (D x,y)))
+  <|>  
+    let* x = natural in
+    (if (0 <= x) && (x <= 9) then pure (D x) else fail  )
+
+let parse_expr e = 
+  parse (expr()) e 
+
+ *)                         
+
+
+(* Grammar 
+
+<expr> ::= <term>+<expr> | <term>
+<term> ::= <digit>*<term> | <digit>
+<digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+
+ *)
+  
+type expr = Add of expr * expr | Mul of expr * expr | D of int
+
+let rec expr_to_string (c:expr) : string =
+  match c with
+  | Add(t1,t2) -> (expr_to_string t1) ^ "+" ^ (expr_to_string t2)
+  | Mul(t1,t2) -> (expr_to_string t1) ^ "*" ^ (expr_to_string t2)
+  | D d -> string_of_int d
+
+
+let rec digit() =
+  let* x = natural in
+    (if (0 <= x) && (x <= 9) then pure (D x) else fail  )
+
+let rec term() = 
+  (let* x = digit() in 
+   let* _= ws in 
+   let* _=  char '*' in 
+   let* _= ws in 
+   let* y= term() in
+   let* _= ws in 
+   pure (Mul (x,y)))
+ <|> digit()
+
+let rec expr() = 
+(let* x = term() in 
+   let* _= ws in 
+   let* _=  char '+' in 
+   let* _= ws in 
+   let* y= expr() in
+   let* _= ws in 
+   pure (Add ( x,y)))
+  <|> term ()
+
+let parse_expr e = 
+  match parse (expr()) e with
+  |Some (x,[]) -> Some x
+  | _ -> None 
+
+  (* ****** ****** *)
+(*
+//
+Assign6:
+Parsing and parsing combinators
+//
+DUE: the 13th of November, 2023
+//
+Except for the basic arithmetic functions
+(including those on chars), you may only use
+the functions in classlib/OCaml/MyOCaml.ml
+//
+*)
+(* ****** ****** *)
+
+(*
+//
+Assign6-1:
+//
+Please implement a print and parse function. Using parser combinators. When
+given a valid string according to the grammar, your parse function returns an
+sexpr value encoding the expression.
+
+//
+let sexpr_to_string (e : sexpr)  : string       = ...
+let sexpr_parse     (s : string) : sexpr option = ...
+//
+
+Example (Accepted Strings):
+sexpr_parse "(add 1 2 3)" = Some (SAdd [SInt 1; SInt 2; Int 3])
+sexpr_parse "(mul (add 1 2) 3 (mul 1))" = Some (SMul [SAdd [SInt 1; SInt 2]; SInt 3; SMul [SInt 1]])
+//
+Example (Rejected Strings):
+sexpr_parse "()" = None
+sexpr_parse "(add)" = None
+sexpr_parse "(add 1 2))" = None
+sexpr_parse "((mul 1 2)" = None
+//
+*)
+
+(* ****** ****** *)
+
+
+
+Grammar (<expr> is the start symbol)
+
+<digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+<num>   ::= <digit> | <digit><num>
+<exprs> ::= <expr> | <expr> <exprs>
+<expr>  ::= <num>
+          | (add <exprs> )
+          | (mul <exprs> )
+
+
+type sexpr =
+  | SInt of int        (* 1, 2, 3, 4 ...  *)
+  | SAdd of sexpr list (* (add e1 e2 ...) *)
+  | SMul of sexpr list (* (mul e1 e2 ...) *)
+
+(* ****** ****** *)
+
+(* end of [CS320-2023-Fall-assigns-assign6.ml] *)
+
+  type sexpr =
+  | SInt of int        (* 1, 2, 3, 4 ...  *)
+  | SAdd of sexpr list (* (add e1 e2 ...) *)
+  | SMul of sexpr list (* (mul e1 e2 ...) *)
+
+let rec sexpr_to_string e =
+  match e with
+  | SInt n -> string_of_int n
+  | SAdd exprs ->
+      "SAdd (" ^ exprs_to_string exprs ^ ")"
+  | SMul exprs ->
+      "SMul (" ^ exprs_to_string exprs ^ ")"
+
+and exprs_to_string exprs =
+  match exprs with
+  | [] -> ""
+  | [expr] -> sexpr_to_string expr
+  | expr :: rest -> sexpr_to_string expr ^ " " ^ exprs_to_string rest
+
+let parse_sint =
+  let* n = natural in
+  pure (SInt n)
+
+let parse_sadd () input =
+  let* _ = keyword "(add" input in
+  let* exprs = parse_sexprs () in
+  let* _ = keyword ")" in
+  pure (SAdd exprs)
+
+let parse_smul () input =
+  let* _ = keyword "(mul" input in
+  let* exprs = parse_sexprs () in
+  let* _ = keyword ")" in
+  pure (SMul exprs)
+
+let parse_sexpr input =
+  match parse_sint input with
+  | Some sexpr -> Some sexpr
+  | None ->
+      match parse_sadd input with
+      | Some sexpr -> Some sexpr
+      | None -> parse_smul input
+
+let parse_sexprs () =
+  many' (fun () -> whitespaces >> parse_sexpr ())
+
+let sexpr_parse s =
+  match string_parse (parse_sexpr ()) s with
+  | Some (sexpr, []) -> Some sexpr
+  | _ -> None
