@@ -689,7 +689,8 @@ let toString (c : const) : string =
    let add_stack (stack : stack) (trace : string list) : (stack * string list ) =
       match stack with
       | D i :: D j :: rest ->  (D (i + j) :: rest, trace)
-      | D _ :: _ :: _ :: _ ->  (stack, "Panic" :: trace) (* AddError1: Stack has more than 2 elements *)
+      | D _ :: Unit :: rest->  (stack, "Panic" :: trace) 
+      | D _ :: B _ :: rest-> (stack, "Panic" :: trace) 
       | [_] ->  (stack, "Panic" :: trace) (* AddError3: Stack has only 1 element *)
       | _ -> (stack, "Panic" :: trace) (* AddError2: Stack is empty *)
     
@@ -697,7 +698,7 @@ let toString (c : const) : string =
       let sub_stack (stack : stack) (trace : string list) : (stack * string list ) =
          match stack with
          | D i :: D j :: rest ->  (D (i - j) :: rest, trace)
-         | D _ :: _ :: _ :: _ ->  (stack, "Panic" :: trace) (* SubError1: Stack has more than 2 elements *)
+         | D _ ::  _ :: _ ->  (stack, "Panic" :: trace) (* SubError1: Stack has more than 2 elements *)
          | [_] ->  (stack, "Panic" :: trace) (* SubError3: Stack has only 1 element *)
          | _ ->  (stack, "Panic" :: trace) (* SubError2: Stack is empty *)
        
@@ -713,10 +714,8 @@ let toString (c : const) : string =
   let div_stack (stack : stack) (trace : string list) : (stack * string list ) =
    match stack with
    | D i :: D 0 :: rest ->  (stack, "Panic" :: trace)
-   | D i :: D j :: rest ->
-     if i mod j <> 0 then  (stack, "Panic" :: trace) (* DivError1: i is not divisible by j *)
-     else  ((D (i / j) :: rest, trace))
-     | _ :: _ :: _ ->  (stack, "Panic" :: trace) (* DivError2: Stack has more than 2 elements *)
+   | D i :: D j :: rest -> ((D (i / j) :: rest, trace))
+     | D _ :: _ :: _ ->  (stack, "Panic" :: trace) (* DivError2: Stack has more than 2 elements *)
    | [_] ->  (stack, "Panic" :: trace) (* DivError3: Stack has only 1 element *)
    | _ ->  (stack, "Panic" :: trace) (* Default case for unexpected scenarios *)
 
@@ -758,6 +757,9 @@ let toString (c : const) : string =
                   
 
                   let rec run_program (commands : com list) (stack : stack) (trace : string list) : (stack * string list) =
+                     match trace with 
+                     | "Panic" :: rest -> (stack, trace)
+                     | _ -> 
                      match commands with
                      | [] -> (stack, trace) (* Base case: No more commands to execute *)
                      | cmd :: rest ->
