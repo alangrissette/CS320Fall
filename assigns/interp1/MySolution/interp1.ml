@@ -588,9 +588,8 @@ type com =
     <|> (literal "Unit;" >> pure (Push Unit))
     )
 let pop_parser : com parser =
-   
+   ws >>
   (literal "Pop;") >>
-  ws >>
   pure Pop 
 
 let trace_parser : com parser =
@@ -669,10 +668,10 @@ match item with
 
          
 
-let pop_stack (s : stack) (trace: string list): (stack* string list ) =
+let pop_stack (s : stack) (trace: string list): (stack * string list) =
   match s with
-  | [] -> (s,"Panic" :: trace)
-  | _ :: rest -> (rest, trace)
+  | hd :: rest -> (rest, trace)
+  | _ ->  s, "Panic":: trace
 
 
 let toString (c : const) : string =
@@ -684,77 +683,77 @@ let toString (c : const) : string =
 
   let trace_stack (stack : stack) (trace : string list) : (stack * string list ) =
    match stack with
-   | [] -> (stack, "Panic"::trace)
+   | [] -> (stack, "TPanic"::trace)
    | c :: rest -> (Unit :: rest, toString c:: trace)
 
    let add_stack (stack : stack) (trace : string list) : (stack * string list ) =
       match stack with
       | D i :: D j :: rest ->  (D (i + j) :: rest, trace)
-      | D _ :: _ :: _ :: _ ->  (stack, "panic" :: trace) (* AddError1: Stack has more than 2 elements *)
-      | [_] ->  (stack, "panic" :: trace) (* AddError3: Stack has only 1 element *)
-      | _ -> (stack, "panic" :: trace) (* AddError2: Stack is empty *)
+      | D _ :: _ :: _ :: _ ->  (stack, "Apanic" :: trace) (* AddError1: Stack has more than 2 elements *)
+      | [_] ->  (stack, "Apanic" :: trace) (* AddError3: Stack has only 1 element *)
+      | _ -> (stack, "Apanic" :: trace) (* AddError2: Stack is empty *)
     
 
       let sub_stack (stack : stack) (trace : string list) : (stack * string list ) =
          match stack with
          | D i :: D j :: rest ->  (D (i - j) :: rest, trace)
-         | D _ :: _ :: _ :: _ ->  (stack, "panic" :: trace) (* SubError1: Stack has more than 2 elements *)
-         | [_] ->  (stack, "panic" :: trace) (* SubError3: Stack has only 1 element *)
-         | _ ->  (stack, "panic" :: trace) (* SubError2: Stack is empty *)
+         | D _ :: _ :: _ :: _ ->  (stack, "S1panic" :: trace) (* SubError1: Stack has more than 2 elements *)
+         | [_] ->  (stack, "2Spanic" :: trace) (* SubError3: Stack has only 1 element *)
+         | _ ->  (stack, "S3panic" :: trace) (* SubError2: Stack is empty *)
        
 
          let mul_stack (stack : stack) (trace : string list) : (stack * string list ) =
             match stack with
             | D i :: D j :: rest -> (D (i * j) :: rest, trace)
-            | D _ :: _ :: _ ->  (stack, "panic" :: trace) (* MulError1: Stack has more than 2 elements *)
-            | [_] ->  (stack, "panic" :: trace) (* MulError3: Stack has only 1 element *)
-            | _ ->  (stack, "panic" :: trace) (* MulError2: Stack is empty *)
+            | D _ :: _ :: _ ->  (stack, "Mpanic" :: trace) (* MulError1: Stack has more than 2 elements *)
+            | [_] ->  (stack, "Mpanic" :: trace) (* MulError3: Stack has only 1 element *)
+            | _ ->  (stack, "Mpanic" :: trace) (* MulError2: Stack is empty *)
           
 
   let div_stack (stack : stack) (trace : string list) : (stack * string list ) =
    match stack with
-   | D i :: D 0 :: rest ->  (stack, "panic" :: trace)
+   | D i :: D 0 :: rest ->  (stack, "Dpanic" :: trace)
    | D i :: D j :: rest ->
-     if i mod j <> 0 then  (stack, "panic" :: trace) (* DivError1: i is not divisible by j *)
+     if i mod j <> 0 then  (stack, "Dpanic" :: trace) (* DivError1: i is not divisible by j *)
      else  ((D (i / j) :: rest, trace))
-     | _ :: _ :: _ ->  (stack, "panic" :: trace) (* DivError2: Stack has more than 2 elements *)
-   | [_] ->  (stack, "panic" :: trace) (* DivError3: Stack has only 1 element *)
-   | _ ->  (stack, "panic" :: trace) (* Default case for unexpected scenarios *)
+     | _ :: _ :: _ ->  (stack, "Dpanic" :: trace) (* DivError2: Stack has more than 2 elements *)
+   | [_] ->  (stack, "Dpanic" :: trace) (* DivError3: Stack has only 1 element *)
+   | _ ->  (stack, "Dpanic" :: trace) (* Default case for unexpected scenarios *)
 
    let and_stack (stack : stack) (trace : string list) : (stack * string list ) =
       match stack with
       | B a :: B b :: rest ->  (B (a && b) :: rest, trace)
-      |  _ :: _ :: _ ->  (stack, "panic" :: trace) (* AndError1: Stack has more than 2 elements *)
-      | [_] ->  (stack, "panic" :: trace) (* AndError3: Stack has only 1 element *)
-      | _ ->  (stack, "panic" :: trace) (* AndError2: Stack is empty *)
+      |  _ :: _ :: _ ->  (stack, "Apanic" :: trace) (* AndError1: Stack has more than 2 elements *)
+      | [_] ->  (stack, "Apanic" :: trace) (* AndError3: Stack has only 1 element *)
+      | _ ->  (stack, "pAanic" :: trace) (* AndError2: Stack is empty *)
     
       let or_stack (stack : stack) (trace : string list) : (stack * string list ) =
          match stack with
          | B a :: B b :: rest ->  (B (a || b) :: rest, trace)
-         |  _ :: _ :: _ ->  (stack, "panic" :: trace) (* OrError1: Stack has more than 2 elements *)
-         | [_] ->  (stack, "panic" :: trace) (* OrError3: Stack has only 1 element *)
-         | _ ->  (stack, "panic" :: trace) (* OrError2: Stack is empty *)
+         |  _ :: _ :: _ ->  (stack, "Opanic" :: trace) (* OrError1: Stack has more than 2 elements *)
+         | [_] ->  (stack, "Opanic" :: trace) (* OrError3: Stack has only 1 element *)
+         | _ ->  (stack, "Opanic" :: trace) (* OrError2: Stack is empty *)
 
          let not_stack (stack : stack) (trace : string list) : (stack * string list ) =
             match stack with
             | B a :: rest ->  (B (not a) :: rest, trace)
-            | _ :: _ :: _ ->  (stack, "panic" :: trace) (* NotError1: Stack has more than 1 element *)
-            | [_] ->  (stack, "panic" :: trace) (* NotError2: Stack is empty *)
-            | _ ->  (stack, "panic" :: trace) (* NotError1: Top element is not a boolean *)
+            | _ :: _ :: _ ->  (stack, "Npanic" :: trace) (* NotError1: Stack has more than 1 element *)
+            | [_] ->  (stack, "Nanic" :: trace) (* NotError2: Stack is empty *)
+            | _ ->  (stack, "Npanic" :: trace) (* NotError1: Top element is not a boolean *)
 
             let lt_stack (stack : stack) (trace : string list) : (stack * string list ) =
                match stack with
                | D i :: D j :: rest ->  (B (i < j) :: rest, trace)
-               | _ :: _ :: _ ->  (stack, "panic" :: trace) (* LtError1: Stack has more than 2 elements *)
-               | [_] ->  (stack, "panic" :: trace) (* LtError3: Stack has only 1 element *)
-               | _ ->  (stack, "panic" :: trace) (* LtError1: Top elements are not integers *)
+               | _ :: _ :: _ ->  (stack, "Lpanic" :: trace) (* LtError1: Stack has more than 2 elements *)
+               | [_] ->  (stack, "Lpanic" :: trace) (* LtError3: Stack has only 1 element *)
+               | _ ->  (stack, "Lpanic" :: trace) (* LtError1: Top elements are not integers *)
              
                let gt_stack (stack : stack) (trace : string list) : (stack * string list ) =
                   match stack with
                   | D i :: D j :: rest ->  (B (i > j) :: rest, [])
-                  | _ :: _ :: _ ->  (stack, "Panic"::trace) (* GtError1: Stack has more than 2 elements *)
-                  | [_] ->  (stack, "Panic"::trace) (* GtError3: Stack has only 1 element *)
-                  | _ ->  (stack, "Panic"::trace) (* GtError1: Top elements are not integers *)
+                  | _ :: _ :: _ ->  (stack, "GPanic"::trace) (* GtError1: Stack has more than 2 elements *)
+                  | [_] ->  (stack, "GPanic"::trace) (* GtError3: Stack has only 1 element *)
+                  | _ ->  (stack, "GPanic"::trace) (* GtError1: Top elements are not integers *)
 
                   
 
@@ -807,7 +806,7 @@ let interp (s : string) : string list option =
    match parse_commands s with
    | Some commands ->
      (match run_program commands [] [] with
-     | (final_stack, finaltrace) ->  Some (finaltrace) 
+     | (final_stack, finaltrace) ->  Some (finaltrace)
      )
    |_ -> None
 
