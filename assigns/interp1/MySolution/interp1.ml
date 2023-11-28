@@ -689,64 +689,64 @@ let toString (c : const) : string =
    let add_stack (stack : stack) (trace : string list) : (stack * string list ) =
       match stack with
       | D i :: D j :: rest ->  (D (i + j) :: rest, trace)
-      | D _ :: _ :: _ :: _ ->  (stack, "panic" :: trace) (* AddError1: Stack has more than 2 elements *)
-      | [_] ->  (stack, "panic" :: trace) (* AddError3: Stack has only 1 element *)
-      | _ -> (stack, "panic" :: trace) (* AddError2: Stack is empty *)
+      | D _ :: _ :: _ :: _ ->  (stack, "Panic" :: trace) (* AddError1: Stack has more than 2 elements *)
+      | [_] ->  (stack, "Panic" :: trace) (* AddError3: Stack has only 1 element *)
+      | _ -> (stack, "Panic" :: trace) (* AddError2: Stack is empty *)
     
 
       let sub_stack (stack : stack) (trace : string list) : (stack * string list ) =
          match stack with
          | D i :: D j :: rest ->  (D (i - j) :: rest, trace)
-         | D _ :: _ :: _ :: _ ->  (stack, "panic" :: trace) (* SubError1: Stack has more than 2 elements *)
-         | [_] ->  (stack, "panic" :: trace) (* SubError3: Stack has only 1 element *)
-         | _ ->  (stack, "panic" :: trace) (* SubError2: Stack is empty *)
+         | D _ :: _ :: _ :: _ ->  (stack, "Panic" :: trace) (* SubError1: Stack has more than 2 elements *)
+         | [_] ->  (stack, "Panic" :: trace) (* SubError3: Stack has only 1 element *)
+         | _ ->  (stack, "Panic" :: trace) (* SubError2: Stack is empty *)
        
 
          let mul_stack (stack : stack) (trace : string list) : (stack * string list ) =
             match stack with
             | D i :: D j :: rest -> (D (i * j) :: rest, trace)
-            | D _ :: _ :: _ ->  (stack, "panic" :: trace) (* MulError1: Stack has more than 2 elements *)
-            | [_] ->  (stack, "panic" :: trace) (* MulError3: Stack has only 1 element *)
-            | _ ->  (stack, "panic" :: trace) (* MulError2: Stack is empty *)
+            | D _ :: _ :: _ ->  (stack, "Panic" :: trace) (* MulError1: Stack has more than 2 elements *)
+            | [_] ->  (stack, "Panic" :: trace) (* MulError3: Stack has only 1 element *)
+            | _ ->  (stack, "Panic" :: trace) (* MulError2: Stack is empty *)
           
 
   let div_stack (stack : stack) (trace : string list) : (stack * string list ) =
    match stack with
-   | D i :: D 0 :: rest ->  (stack, "panic" :: trace)
+   | D i :: D 0 :: rest ->  (stack, "Panic" :: trace)
    | D i :: D j :: rest ->
-     if i mod j <> 0 then  (stack, "panic" :: trace) (* DivError1: i is not divisible by j *)
+     if i mod j <> 0 then  (stack, "Panic" :: trace) (* DivError1: i is not divisible by j *)
      else  ((D (i / j) :: rest, trace))
-     | _ :: _ :: _ ->  (stack, "panic" :: trace) (* DivError2: Stack has more than 2 elements *)
-   | [_] ->  (stack, "panic" :: trace) (* DivError3: Stack has only 1 element *)
-   | _ ->  (stack, "panic" :: trace) (* Default case for unexpected scenarios *)
+     | _ :: _ :: _ ->  (stack, "Panic" :: trace) (* DivError2: Stack has more than 2 elements *)
+   | [_] ->  (stack, "Panic" :: trace) (* DivError3: Stack has only 1 element *)
+   | _ ->  (stack, "Panic" :: trace) (* Default case for unexpected scenarios *)
 
    let and_stack (stack : stack) (trace : string list) : (stack * string list ) =
       match stack with
       | B a :: B b :: rest ->  (B (a && b) :: rest, trace)
-      |  _ :: _ :: _ ->  (stack, "panic" :: trace) (* AndError1: Stack has more than 2 elements *)
-      | [_] ->  (stack, "panic" :: trace) (* AndError3: Stack has only 1 element *)
-      | _ ->  (stack, "panic" :: trace) (* AndError2: Stack is empty *)
+      |  _ :: _ :: _ ->  (stack, "Panic" :: trace) (* AndError1: Stack has more than 2 elements *)
+      | [_] ->  (stack, "Panic" :: trace) (* AndError3: Stack has only 1 element *)
+      | _ ->  (stack, "Panic" :: trace) (* AndError2: Stack is empty *)
     
       let or_stack (stack : stack) (trace : string list) : (stack * string list ) =
          match stack with
          | B a :: B b :: rest ->  (B (a || b) :: rest, trace)
-         |  _ :: _ :: _ ->  (stack, "panic" :: trace) (* OrError1: Stack has more than 2 elements *)
-         | [_] ->  (stack, "panic" :: trace) (* OrError3: Stack has only 1 element *)
-         | _ ->  (stack, "panic" :: trace) (* OrError2: Stack is empty *)
+         |  _ :: _ :: _ ->  (stack, "Panic" :: trace) (* OrError1: Stack has more than 2 elements *)
+         | [_] ->  (stack, "Panic" :: trace) (* OrError3: Stack has only 1 element *)
+         | _ ->  (stack, "Panic" :: trace) (* OrError2: Stack is empty *)
 
          let not_stack (stack : stack) (trace : string list) : (stack * string list ) =
             match stack with
             | B a :: rest ->  (B (not a) :: rest, trace)
-            | _ :: _ :: _ ->  (stack, "panic" :: trace) (* NotError1: Stack has more than 1 element *)
-            | [_] ->  (stack, "panic" :: trace) (* NotError2: Stack is empty *)
-            | _ ->  (stack, "panic" :: trace) (* NotError1: Top element is not a boolean *)
+            | _ :: _ :: _ ->  (stack, "Panic" :: trace) (* NotError1: Stack has more than 1 element *)
+            | [_] ->  (stack, "Panic" :: trace) (* NotError2: Stack is empty *)
+            | _ ->  (stack, "Panic" :: trace) (* NotError1: Top element is not a boolean *)
 
             let lt_stack (stack : stack) (trace : string list) : (stack * string list ) =
                match stack with
                | D i :: D j :: rest ->  (B (i < j) :: rest, trace)
-               | _ :: _ :: _ ->  (stack, "panic" :: trace) (* LtError1: Stack has more than 2 elements *)
-               | [_] ->  (stack, "panic" :: trace) (* LtError3: Stack has only 1 element *)
-               | _ ->  (stack, "panic" :: trace) (* LtError1: Top elements are not integers *)
+               | _ :: _ :: _ ->  (stack, "Panic" :: trace) (* LtError1: Stack has more than 2 elements *)
+               | [_] ->  (stack, "Panic" :: trace) (* LtError3: Stack has only 1 element *)
+               | _ ->  (stack, "Panic" :: trace) (* LtError1: Top elements are not integers *)
              
                let gt_stack (stack : stack) (trace : string list) : (stack * string list ) =
                   match stack with
