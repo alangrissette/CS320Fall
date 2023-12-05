@@ -134,6 +134,7 @@ let toString (c : const) : string =
   | Bool false -> "False"
   | Unit -> "Unit"
   | Symbol x -> x
+  | Closure (x, v, c ) -> "This is a Closure"
 
 let rec lookup_variable (x : string)(var:env): const option=
 match var with
@@ -211,8 +212,9 @@ let rec eval (s : stack) (t : trace) (p : prog) (v: env ) : trace =
      | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] [])
   | Swap :: p0 ->
     (match s with
-    | v1 :: v2 :: s0 -> eval (v2 :: v1 :: s0) t p v
+    | const1 :: const2 :: s0 -> eval (const2 :: const1 :: s0) t p0 v
     | _ -> eval [] ("Panic" :: t) [] [])
+
 | If (true_branch, false_branch) :: p0 ->
     (match s with
      | Bool true_val :: s0 -> 
@@ -242,17 +244,16 @@ let rec eval (s : stack) (t : trace) (p : prog) (v: env ) : trace =
 
   | Call :: p0 -> 
     (match s with
-    | Closure (f, vf, c) :: a :: s0 ->
-      let new_env = (f, Closure (f, vf, c)) :: vf @ v in
-      eval (a :: Closure (f, vf, p0) :: s0) t c new_env
+    | Closure (f, vf, c) :: a :: s0 -> let currentcontinuation = Closure("cc", v, p0) in
+      eval (a::currentcontinuation::s0) (t) (c) ((f,Closure(f,vf,c))::vf ) 
+
     | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
     | _ :: s0 -> eval [] ("Panic" :: t) [] []
     | [] -> eval [] ("Panic" :: t) [] [])
 
 | Return :: p0 -> 
   (match s with 
-  | Closure (f, vf, c) :: a :: s0 ->
-    eval (a :: s0) t c vf (* return a function call *)
+  | Closure (f, vf, c) :: a :: s0 -> eval (a :: s0) (t) (c) (vf) (* return a function call *)
   | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
   | _ :: s0 -> eval [] ("Panic" :: t) [] []
   | [] -> eval [] ("Panic" :: t) [] [])
