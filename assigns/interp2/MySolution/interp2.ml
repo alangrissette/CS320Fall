@@ -34,7 +34,7 @@ and com =
   | Add | Sub | Mul | Div
   | And | Or | Not
   | Lt | Gt  | If of coms * coms | Bind | Lookup 
-  | Fun of coms | Call | Return
+  | Fun of coms | Call | Return | Swap
   
 
 
@@ -88,7 +88,9 @@ let parse_const =
   
 
         
-
+  let rec whitespaces2 = 
+    let* _ = many (satisfy (fun c -> c = ' ' || c = '\t')) in
+    pure ()
 
 let rec parse_com() = 
   let*_ = pure() in
@@ -104,6 +106,7 @@ let rec parse_com() =
   (keyword "Not" >> pure Not) <|>
   (keyword "Lt" >> pure Lt) <|>
   (keyword "Gt" >> pure Gt) <|>
+  (keyword "Swap">> pure Swap)<|>
   (keyword "If" >>
   let* true_branch = parse_coms () in
   keyword "Else" >>
@@ -112,10 +115,13 @@ let rec parse_com() =
   pure (If (true_branch, false_branch))) <|>
   (keyword "Bind" >> pure Bind) <|>
   (keyword "Lookup" >> pure Lookup) <|>
-  (keyword "Fun" >> parse_coms () >>= fun c ->
-    keyword "End" >> pure (Fun c)) <|>
+  (keyword "Fun" >>
+    let* c = parse_coms () in
+    keyword "End" >>
+    pure (Fun c)) <|>
   (keyword "Call" >> pure Call) <|>
   (keyword "Return" >> pure Return) 
+  
 
 
 
@@ -235,6 +241,10 @@ let rec eval (s : stack) (t : trace) (p : prog) (v: env ) : trace =
      | _ :: _ :: s0         (* GtError1 *) -> eval [] ("Panic" :: t) [] []
      | []                   (* GtError2 *) -> eval [] ("Panic" :: t) [] []
      | _ :: []              (* GtError3 *) -> eval [] ("Panic" :: t) [] [])
+  | Swap :: p0 ->
+    (match s with
+    | v1 :: v2 :: s0 -> eval (v2 :: v1 :: s0) t p v
+    | _ -> eval [] ("Panic" :: t) [] [])
 | If (true_branch, false_branch) :: p0 ->
     (match s with
      | Bool true_val :: s0 -> 
@@ -259,21 +269,22 @@ let rec eval (s : stack) (t : trace) (p : prog) (v: env ) : trace =
   |Symbol x :: s0 -> eval (Closure (x, v, c) :: s0) t  p0 v
   | _ -> eval [] ("Panic" :: t) [] [])
 
-| Call :: p0 -> 
+  | Call :: p0 -> 
     (match s with
     | Closure (f, vf, c) :: a :: s0 ->
-      eval (a :: Closure (f, v, p0) :: s0) t c (( f, Closure (f, vf, c)) :: vf)  
+      eval (a :: Closure (f, v, p0) :: s0) t c ((f, Closure (f, vf, c)) :: vf @ v)  
     | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
     | _ :: s0 -> eval [] ("Panic" :: t) [] []
     | [] -> eval [] ("Panic" :: t) [] [])
-
+  
   | Return :: p0 -> 
     (match s with 
     | Closure (f, vf, c) :: a :: s0 ->
-      eval (a :: s0) t c vf 
-    | _ :: a :: s0 -> eval [] ("Panic" :: t) [][]
+      eval (a :: s0) t c vf (* return a function call *)
+    | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
     | _ :: s0 -> eval [] ("Panic" :: t) [] []
     | [] -> eval [] ("Panic" :: t) [] [])
+  
 
 
 
