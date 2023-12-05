@@ -1,18 +1,6 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
-(*
 
-Please implement the interp function following the
-specifications described in CS320_Fall_2023_Project-1.pdf
-
-Notes:
-1. You are only allowed to use library functions defined in MyOCaml.ml
-   or ones you implement yourself.
-2. You may NOT use OCaml standard library functions directly.
-
-*)
-
-(* abstract syntax tree of interp1 *)
 
 type const =
   | Int of int
@@ -35,10 +23,9 @@ and com =
   | And | Or | Not
   | Lt | Gt  | If of coms * coms | Bind | Lookup 
   | Fun of coms | Call | Return | Swap
-  
-
 
 (* ------------------------------------------------------------ *)
+
 
 (* parsers for interp1 *)
 let parse_nat = 
@@ -63,22 +50,12 @@ let parse_int =
       pure (Symbol symbol_str)
     
     
-    
-  
-    
-    
-    
-
-    
 let parse_bool =
   (keyword "True" >> pure (Bool true)) <|>
   (keyword "False" >> pure (Bool false))
 
 let parse_unit =
   keyword "Unit" >> pure Unit
-
-
-  
 
 let parse_const =
   parse_int <|>
@@ -87,7 +64,6 @@ let parse_const =
   parse_symbol
   
 
-        
   let rec whitespaces2 = 
     let* _ = many (satisfy (fun c -> c = ' ' || c = '\t')) in
     pure ()
@@ -123,18 +99,10 @@ let rec parse_com() =
   (keyword "Return" >> pure Return) 
   
 
-
-
-    
-
-
-
   and parse_coms() =
   let*_ = pure() in
    many (parse_com() << keyword ";")
 
-  
-  
     
 
 (* ------------------------------------------------------------ *)
@@ -255,7 +223,10 @@ let rec eval (s : stack) (t : trace) (p : prog) (v: env ) : trace =
 | Bind :: p0 -> 
   (match s with 
   | Symbol x :: const :: s0 ->  eval s0 t p0 ((x, const) :: v)
-  | _ -> eval [] ("Panic" :: t) [] [])
+  | _ :: const:: s0 -> eval [] ("Panic" :: t) [] []
+  | _ :: s0 -> eval [] ("Panic" :: t) [] []
+  | [] -> eval [] ("Panic" :: t) [] [])
+
 | Lookup :: p0 ->
   (match s with
   | Symbol x :: tl ->
@@ -272,29 +243,19 @@ let rec eval (s : stack) (t : trace) (p : prog) (v: env ) : trace =
   | Call :: p0 -> 
     (match s with
     | Closure (f, vf, c) :: a :: s0 ->
-      eval (a :: Closure (f, v, p0) :: s0) t c ((f, Closure (f, vf, c)) :: vf @ v)  
+      let new_env = (f, Closure (f, vf, c)) :: vf @ v in
+      eval (a :: Closure (f, vf, p0) :: s0) t c new_env
     | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
     | _ :: s0 -> eval [] ("Panic" :: t) [] []
     | [] -> eval [] ("Panic" :: t) [] [])
-  
-  | Return :: p0 -> 
-    (match s with 
-    | Closure (f, vf, c) :: a :: s0 ->
-      eval (a :: s0) t c vf (* return a function call *)
-    | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
-    | _ :: s0 -> eval [] ("Panic" :: t) [] []
-    | [] -> eval [] ("Panic" :: t) [] [])
-  
 
-
-
-
-
-
-
-
-    
-
+| Return :: p0 -> 
+  (match s with 
+  | Closure (f, vf, c) :: a :: s0 ->
+    eval (a :: s0) t c vf (* return a function call *)
+  | _ :: a :: s0 -> eval [] ("Panic" :: t) [] []
+  | _ :: s0 -> eval [] ("Panic" :: t) [] []
+  | [] -> eval [] ("Panic" :: t) [] [])
   
 
 (* ------------------------------------------------------------ *)

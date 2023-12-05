@@ -698,26 +698,28 @@ let toString (c : const) : string =
       let sub_stack (stack : stack) (trace : string list) : (stack * string list ) =
          match stack with
          | D i :: D j :: rest ->  (D (i - j) :: rest, trace)
-         | D _ ::  _ :: _ ->  (stack, "Panic" :: trace) (* SubError1: Stack has more than 2 elements *)
-         | [_] ->  (stack, "Panic" :: trace) (* SubError3: Stack has only 1 element *)
-         | _ ->  (stack, "Panic" :: trace) (* SubError2: Stack is empty *)
-       
+         | D _ :: Unit :: rest->  (stack, "Panic" :: trace) 
+      | D _ :: B _ :: rest-> (stack, "Panic" :: trace) 
+      | [_] ->  (stack, "Panic" :: trace) (* AddError3: Stack has only 1 element *)
+      | _ -> (stack, "Panic" :: trace) (* AddError2: Stack is empty *)
 
          let mul_stack (stack : stack) (trace : string list) : (stack * string list ) =
             match stack with
             | D i :: D j :: rest -> (D (i * j) :: rest, trace)
-            | D _ :: _ :: _ ->  (stack, "Panic" :: trace) (* MulError1: Stack has more than 2 elements *)
-            | [_] ->  (stack, "Panic" :: trace) (* MulError3: Stack has only 1 element *)
-            | _ ->  (stack, "Panic" :: trace) (* MulError2: Stack is empty *)
+            | D _ :: Unit :: rest->  (stack, "Panic" :: trace) 
+      | D _ :: B _ :: rest-> (stack, "Panic" :: trace) 
+      | [_] ->  (stack, "Panic" :: trace) (* AddError3: Stack has only 1 element *)
+      | _ -> (stack, "Panic" :: trace) (* AddError2: Stack is empty *)
           
 
   let div_stack (stack : stack) (trace : string list) : (stack * string list ) =
    match stack with
    | D i :: D 0 :: rest ->  (stack, "Panic" :: trace)
    | D i :: D j :: rest -> ((D (i / j) :: rest, trace))
-     | D _ :: _ :: _ ->  (stack, "Panic" :: trace) (* DivError2: Stack has more than 2 elements *)
-   | [_] ->  (stack, "Panic" :: trace) (* DivError3: Stack has only 1 element *)
-   | _ ->  (stack, "Panic" :: trace) (* Default case for unexpected scenarios *)
+   | D _ :: Unit :: rest->  (stack, "Panic" :: trace) 
+   | D _ :: B _ :: rest-> (stack, "Panic" :: trace) 
+   | [_] ->  (stack, "Panic" :: trace) (* AddError3: Stack has only 1 element *)
+   | _ -> (stack, "Panic" :: trace) (* AddError2: Stack is empty *)
 
    let and_stack (stack : stack) (trace : string list) : (stack * string list ) =
       match stack with
