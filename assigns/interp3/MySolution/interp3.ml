@@ -17,7 +17,20 @@ Notes:
 (* abstract syntax tree of high-level language *)
 
 
+let append (s1: string) (s2: string): string =
+  let l1 = string_length s1 in
+  let l2 = string_length s2 in
+  let l = l1 + l2 in
+  string_init l
+    (fun i ->
+      if i < l1 then
+        string_get_at s1 i
+      else
+        string_get_at s2 (i - l1)
+    )
+;;
 
+  
 type uopr =
   | Neg | Not
 
@@ -324,6 +337,18 @@ let scope_expr (m : expr) : expr =
   in
   aux [] m
 
+  let append (s1: string) (s2: string): string =
+    let l1 = string_length s1 in
+    let l2 = string_length s2 in
+    let l = l1 + l2 in
+    string_init l
+      (fun i ->
+        if i < l1 then string_get_at s1 i
+        else string_get_at s2 (i - l1)
+      )
+  ;;
+  
+
 (* ------------------------------------------------------------ *)
 
 (* parser for the high-level language *)
@@ -332,40 +357,40 @@ type trace = string list
 type value = Int of int | Bool of bool| Unit | Fun of string * string * expr
 
 
-
-let rec eval (t: trace)(s: expr) : string =
+let rec eval (s: expr) : string =
   match s with
+
+  | Int i -> " Push " ^ string_of_int i ^ ";"
+  | Bool b -> " Push " ^ string_of_bool b ^ ";"
+  | Unit -> " Push Unit;"
+  | Var str -> " Push " ^ str ^ ";" ^ " Lookup;"
+
+  | BOpr (Add, expr1 , expr2) -> (eval expr1) ^ (eval expr2)^ " Add;"
+  | BOpr (Or, expr1, expr2)-> (eval expr1) ^ (eval expr2)^ " Or;"
+  | BOpr (Sub, expr1 , expr2) -> (eval expr1 ) ^ (eval expr2)^ " Swap;" ^ " Sub;"
+  | BOpr (Mul, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^ " Mul;"
+  | BOpr (Div, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^ " Swap;" ^ " Div;"
+  | BOpr (Mod, expr1, expr2) ->(eval (BOpr(Div, expr1, expr2))) ^ (eval expr2) ^ " Mul;" ^ (eval expr1 ) ^ " Sub;"
+  | BOpr (And, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^ " And;"
+  | BOpr (Lt, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^ " Swap;" ^ " Lt;"
+  | BOpr (Gt, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^ " Swap;" ^ " Gt;"
+  | BOpr (Lte, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^ " Swap;" ^ " Lt;" ^ "Not;"
+  | BOpr (Gte, expr1, expr2) -> (eval expr1) ^ (eval expr2) ^" Swap;" ^ " Gt;" ^ "Not;"
+  | BOpr (Eq, expr1, expr2) -> (eval expr1 )^ (eval expr2 ) ^ "Swap; Gt; Not; " ^ (eval expr1)  ^ (eval expr2 ) ^ "Swap; Lt; Not; And; "
+
+
+  | UOpr (Neg, expr1) -> (eval expr1) ^ " Push -1;"^ " Mul;"
+  | UOpr (Not, expr1) ->  (eval expr1) ^ "Not;"
+
+
+  | Let ( string1, expr1, expr2)->  append (append(eval expr1) (append "Push "(append string1 "; Bind; ")))( eval expr2 )
+  | Fun (string1, string2, expr1)-> append (append (append "Push " (append string1 "; Fun ")) (append "Push " (append string2 "; Bind; "))) (append (eval expr1) "Swap; Return; End; ")
+  | App (expr1, expr2) ->  append (append (eval expr1) (eval expr2)) "Swap; Call; "
+  | Seq (expr1, expr2) -> append (append (eval expr1) "Pop; ") (eval expr2)
+  | Ifte (expr1, expr2, expr3) -> append (append (eval expr1) (append "If " (eval expr2))) (append "Else " (append (eval expr3) "End; "))
+  | Trace (expr1) -> (eval expr1 )^ " Trace; "
+
  
-  |BOpr (Add, expr1 , expr2) -> (eval (t)(expr1)) ^" "^ (eval (t)(expr2))^ " Add;"
-  |BOpr (Sub, expr1 , expr2) -> (eval (t)(expr1 )) ^" "^ (eval (t)(expr2))^ " Swap;" ^" Sub;"
-  | BOpr (Mul, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^ " Mul;"
-  | BOpr (Div, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^ " Swap;" ^ " Div;"
-  | BOpr (Mod, expr1, expr2) ->(eval t (BOpr(Div, expr1, expr2))) ^ (eval t expr2) ^ " Mul;" ^ (eval t expr1 ) ^ " Sub;"
-  | BOpr (And, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^ " And;"
-  | BOpr (Lt, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^ " Swap;" ^ " Lt;"
-  | BOpr (Gt, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^ " Swap;" ^ " Gt;"
-  | BOpr (Lte, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^ " Swap;" ^ " Lte;" ^ "Not;"
-  | BOpr (Gte, expr1, expr2) -> (eval t expr1) ^ " " ^ (eval t expr2) ^" Swap;" ^ " Gte;" ^ "Not;"
-  | BOpr (Eq, expr1, expr2) -> (eval t expr1 )^ (eval t expr2 ) ^ "Swap; Gt; Not; " ^ (eval t expr1)  ^ (eval t expr2 ) ^ "Swap; Lt; Not; And; "
-
-
-  | UOpr (Neg, expr1) -> (eval t expr1) ^ " Push -1;"^ " Mul;"
-  | UOpr (Not, expr1) ->  (eval t expr1) ^ "Not;"
-
-
-  | Let ( string1, expr1, expr2)->  " Push " ^ string1 ^ ";" ^ (eval t expr1) ^ "Bind; " ^ (eval t expr2)
-  | Fun (string1, string2, expr1)-> " Push " ^ string1 ^ ";" ^ "Fun " ^  " Push " ^ string2 ^ ";" ^ " Bind; " ^ (eval t expr1 ) ^ "Swap; Return; End; "
-  | App (expr1, expr2) ->  (eval t expr1) ^ " " ^ (eval t expr2) ^ " Swap;" ^ " Call;"
-  | Seq (expr1, expr2) -> (eval t expr1) ^ " Pop;" ^ (eval t expr2) 
-  | Ifte (expr1, expr2, expr3) -> (eval t expr1) ^ "If " ^ eval t expr2 ^  "Else " ^ (eval t expr3) ^ "End; "
-  | Trace (expr1) -> (eval t expr1 )^ "Trace; "
-    
-
-    | Int i -> " Push " ^ string_of_int i ^ ";"
-    | Bool b -> " Push " ^ string_of_bool b ^ ";"
-    | Unit -> " Push Unit;"
-    | Var str -> " Push " ^ str ^ ";" ^ " Lookup;"
-
 
 let parse_prog (s : string) : expr =
   match string_parse (whitespaces >> parse_expr ()) s with
@@ -373,7 +398,7 @@ let parse_prog (s : string) : expr =
   | _ -> raise SyntaxError
 
 let compile s :  string =
-  eval [] (parse_prog s)
+  eval  (parse_prog s)
 
 
 
